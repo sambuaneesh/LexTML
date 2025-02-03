@@ -44,8 +44,20 @@ int search(char *str) {
 }
 
 void init() {
+    char *html_tags[] = {
+        "head", "body", "html", "div", "img",
+        "p", "a", "title", "meta", "link",
+        "script", "style", "form", "input", "button",
+        "table", "tr", "td", "th", "ul",
+        "li", "span", "br", "hr", "h1",
+        "h2", "h3", "h4", "h5", "h6",
+        NULL  // sentinel to mark eo array
+    };
+
     root = newNode();
-    insert("head");
+    for (int i = 0; html_tags[i] != NULL; i++) {
+        insert(html_tags[i]);
+    }
 }
 
 void helper(char* token) {
