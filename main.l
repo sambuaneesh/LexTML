@@ -18,7 +18,8 @@ Node *newNode() {
     return node;
 }
 
-Node *root;
+Node *root; // tags trie
+Node *attr_root;  // sep trie for attribs
 int line = 1;
 
 void insert(char *str) {
@@ -43,28 +44,78 @@ int search(char *str) {
     return curr->end;
 }
 
-void init() {
-    char *html_tags[] = {
-        "head", "body", "html", "div", "img",
-        "p", "a", "title", "meta", "link",
-        "script", "style", "form", "input", "button",
-        "table", "tr", "td", "th", "ul",
-        "li", "span", "br", "hr", "h1",
-        "h2", "h3", "h4", "h5", "h6",
-        NULL  // sentinel to mark eo array
-    };
+char *html_tags[] = {
+    "head", "body", "html", "div", "img",
+    "p", "a", "title", "meta", "link",
+    "script", "style", "form", "input", "button",
+    "table", "tr", "td", "th", "ul",
+    "li", "span", "br", "hr", "h1",
+    "h2", "h3", "h4", "h5", "h6",
+    NULL  // sentinel to mark eo array
+};
 
+char *html_attributes[] = {
+    "src", "alt", "width", "height", "class", 
+    "id", "style", "href", "type", "value",
+    "name", "placeholder", "title", "align", "target",
+    NULL
+};
+
+void init() {
+    // tag trie
     root = newNode();
     for (int i = 0; html_tags[i] != NULL; i++) {
         insert(html_tags[i]);
     }
+    
+    // attrib trie
+    attr_root = newNode();
+    for (int i = 0; html_attributes[i] != NULL; i++) {
+        Node *curr = attr_root;
+        char *str = html_attributes[i];
+        while (*str) {
+            if (curr->children[*str] == NULL)
+                curr->children[*str] = newNode();
+            curr = curr->children[*str];
+            str++;
+        }
+        curr->end = 1;
+    }
+}
+
+int search_attr(char *str) {
+    Node *curr = attr_root;
+    while (*str && *str != '=') {  // searching only till "="
+        if (curr->children[*str] == NULL)
+            return 0;
+        curr = curr->children[*str];
+        str++;
+    }
+    return curr->end;
 }
 
 void helper(char* token) {
-    if (search(token))
-        printf("Line %d: Complete token: \"%s\"\n", line, token);
+    char *tag = strtok(token, " ");
+    if (search(tag))
+        printf("Line %d: Valid tag: %s\n", line, tag);
     else
-        printf("Line %d: Incomplete token: \"%s\"\n", line, token);
+        printf("Line %d: Invalid tag: %s\n", line, tag);
+    
+    char *attr;
+    while ((attr = strtok(NULL, " "))) {
+        char attr_name[100];
+        int i = 0;
+        while (attr[i] && attr[i] != '=') {
+            attr_name[i] = attr[i];
+            i++;
+        }
+        attr_name[i] = '\0';
+        
+        if (search_attr(attr_name))
+            printf("Line %d: Valid attribute: %s\n", line, attr_name);
+        else
+            printf("Line %d: Invalid attribute: %s\n", line, attr_name);
+    }
 }
 
 %}
