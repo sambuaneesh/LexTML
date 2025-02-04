@@ -4,6 +4,8 @@
 #include <stdlib.h>
 
 #define SIZE 128 // 128 -> ascii range
+#define MAX_SUGGESTIONS 10
+#define MAX_WORD_LEN 100
 
 typedef struct Node {
     struct Node *children[SIZE];
@@ -33,19 +35,49 @@ void insert(char *str) {
     curr->end = 1;
 }
 
-int search(char *str) {
-    Node *curr = root;
+void collect(Node *curr, char *prefix, char *suggestions[], int *count) {
+    if (*count >= MAX_SUGGESTIONS) return;
+    
+    if (curr->end) {
+        suggestions[*count] = strdup(prefix);
+        (*count)++;
+    }
+    
+    for (int i = 0; i < SIZE; i++) {
+        if (curr->children[i]) {
+            char newPrefix[MAX_WORD_LEN];
+            sprintf(newPrefix, "%s%c", prefix, i);
+            collect(curr->children[i], newPrefix, suggestions, count);
+        }
+    }
+}
+
+int search(char *str, char *suggestions[], int *count) {
+    Node *curr = attr_root;
+    *count = 0;
+    char prefix[MAX_WORD_LEN] = "";
+    int pos = 0;
+    
     while (*str) {
-        if (curr->children[*str] == NULL)
+        if (curr->children[*str] == NULL) {
+            collect(curr, prefix, suggestions, count);
             return 0;
+        }
         curr = curr->children[*str];
+        prefix[pos++] = *str;
         str++;
+    }
+    prefix[pos] = '\0';
+    
+    if (!curr->end) {
+        collect(curr, prefix, suggestions, count);
+        return 0;
     }
     return curr->end;
 }
 
 char *html_tags[] = {
-    "head", "body", "html", "div", "img",
+    "head", "header", "body", "html", "div", "img",
     "p", "a", "title", "meta", "link",
     "script", "style", "form", "input", "button",
     "table", "tr", "td", "th", "ul",
@@ -55,20 +87,18 @@ char *html_tags[] = {
 };
 
 char *html_attributes[] = {
-    "src", "alt", "width", "height", "class", 
+    "src","srcset", "alt", "width", "height", "class", 
     "id", "style", "href", "type", "value",
     "name", "placeholder", "title", "align", "target",
     NULL
 };
 
 void init() {
-    // tag trie
     root = newNode();
     for (int i = 0; html_tags[i] != NULL; i++) {
         insert(html_tags[i]);
     }
     
-    // attrib trie
     attr_root = newNode();
     for (int i = 0; html_attributes[i] != NULL; i++) {
         Node *curr = attr_root;
@@ -83,23 +113,23 @@ void init() {
     }
 }
 
-int search_attr(char *str) {
-    Node *curr = attr_root;
-    while (*str && *str != '=') {  // searching only till "="
-        if (curr->children[*str] == NULL)
-            return 0;
-        curr = curr->children[*str];
-        str++;
-    }
-    return curr->end;
-}
-
 void helper(char* token) {
+    char *suggestions[MAX_SUGGESTIONS];
+    int count = 0;
+    
     char *tag = strtok(token, " ");
-    if (search(tag))
+    if (search(tag, suggestions, &count)) {
         printf("Line %d: Valid tag: %s\n", line, tag);
-    else
+    } else {
         printf("Line %d: Invalid tag: %s\n", line, tag);
+        if (count > 0) {
+            printf("Suggestions:\n");
+            for (int i = 0; i < count; i++) {
+                printf("- %s\n", suggestions[i]);
+                free(suggestions[i]);
+            }
+        }
+    }
     
     char *attr;
     while ((attr = strtok(NULL, " "))) {
@@ -111,10 +141,19 @@ void helper(char* token) {
         }
         attr_name[i] = '\0';
         
-        if (search_attr(attr_name))
+        count = 0;
+        if (search(attr_name, suggestions, &count)) {
             printf("Line %d: Valid attribute: %s\n", line, attr_name);
-        else
+        } else {
             printf("Line %d: Invalid attribute: %s\n", line, attr_name);
+            if (count > 0) {
+                printf("Suggestions:\n");
+                for (int i = 0; i < count; i++) {
+                    printf("- %s\n", suggestions[i]);
+                    free(suggestions[i]);
+                }
+            }
+        }
     }
 }
 
@@ -126,7 +165,7 @@ void helper(char* token) {
 "<"[^\n>]*">" {
     char token[100];
     strncpy(token, yytext + 1, strlen(yytext) - 2);
-    token[strlen(yytext) - 2] = '\0'; // null terminating str
+    token[strlen(yytext) - 2] = '\0';
     helper(token);
 }
 . { /* ignoring rest */ }
