@@ -129,37 +129,28 @@ void helper(char* token, int type) { // type 0 -> tag, 1 -> attr
     }
 }
 
+// macro for the below redundant code for passing tokens to helper
+#define HANDLE(TYPE) do {                \
+    char token[100];                           \
+    size_t len = strlen(yytext);               \
+    strncpy(token, yytext + 1, len - 2);       \
+    token[len - 2] = '\0';                     \
+    helper(token, TYPE);                       \
+} while(0)
+
 %}
-LETTER    [a-zA-Z]
+TOK    [a-zA-Z]
 
 %%
+
 \n                     { line++; }
-"<!"[^\n>]*">"       { /* ignoring comments and <!DOCTYPE ...> */ }
-"<"{LETTER}+         {
-                          char token[100];
-                          strncpy(token, yytext + 1, strlen(yytext) - 2);
-                          token[strlen(yytext) - 2] = '\0';
-                          helper(token,0);
-                      }
-"<"{LETTER}+">"       {
-                          char token[100];
-                          strncpy(token, yytext + 1, strlen(yytext) - 2);
-                          token[strlen(yytext) - 2] = '\0';
-                          helper(token,0);
-                      }
-{LETTER}+"<"          {
-                          char token[100];
-                          strncpy(token, yytext + 1, strlen(yytext) - 2);
-                          token[strlen(yytext) - 2] = '\0';
-                          helper(token,0);
-                      }
-" "{LETTER}+"="       {
-                          char token[100];
-                          strncpy(token, yytext + 1, strlen(yytext) - 2);
-                          token[strlen(yytext) - 2] = '\0';
-                          helper(token,1);
-                      }
+"<!"[^\n>]*">"         { /* ignoring comments and <!DOCTYPE ...> */ }
+"<"{TOK}+          { HANDLE(0); /*apparently 'or' operator is not working in flex, so did like this*/}
+"<"{TOK}+">"        { HANDLE(0); }
+"/"{TOK}+">"           { HANDLE(0); }
+" "{TOK}+"="        { HANDLE(1); }
 .                     { /* ignoring rest */ }
+
 %%
 
 int main() {
