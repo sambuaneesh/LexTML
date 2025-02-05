@@ -99,7 +99,11 @@ char *html_entities[] = {"amp", "lt", "gt", "quot", "apos", "nbsp",
     "copy", "reg", "euro", "pound", "yen", "sect", "deg", NULL};
 
 char *numeric_entities[] = {"32", "33", "34", "35", "36", "37", "38", "39", 
-    "60", "62", "160", "169", "174", "8364", "163", "165", "167", "176", NULL};
+    "60", "62", "160", "169", "174", "8364", "163", "165", "167", "176", 
+    "x20", "x21", "x22", "x23", "x24", "x25", "x26", "x27", 
+    "x3C", "x3E", "xA0", "xA9", "xAE", "x20AC", "xA3", "xA5", "xA7", 
+    "xB0", "xB5", "xB7", NULL
+};
 
 
 void init() {
@@ -123,35 +127,24 @@ void init() {
 void helper(char* token, int type) { // type 0 -> tag, 1 -> attr, 2 -> entity, 3 -> num_entity
     char *suggestions[MAX_SUGGESTIONS];
     int count = 0;
-    
+
     Node *trie;
-    char *typeName;
     switch (type) {
-        case 0:
-            trie = root;
-            typeName = "tag";
-            break;
-        case 1:
-            trie = attr_root;
-            typeName = "attribute";
-            break;
-        case 2:
-            trie = entity_root;
-            typeName = "entity";
-            break;
-        case 3:
-            trie = num_entity_root;
-            typeName = "numeric entity";
-            break;
-        default:
-            return;
+        case 0: trie = root; break;
+        case 1: trie = attr_root; break;
+        case 2: trie = entity_root; break;
+        case 3: trie = num_entity_root; break;
+        default: return;
     }
-    
-    char *word = strtok(token, " ");
+
+    char word[MAX_WORD_LEN];
+    strncpy(word, token, sizeof(word) - 1);
+    word[sizeof(word) - 1] = '\0';
+
     if (search(trie, word, suggestions, &count)) {
-        printf("Line %d: Valid %s: %s\n", line, typeName, word);
+        printf("Line %d: Valid token: %s\n", line, word);
     } else {
-        printf("Line %d: Invalid %s: %s\n", line, typeName, word);
+        printf("Line %d: Invalid token: %s\n", line, word);
         if (count > 0) {
             printf("Suggestions:\n");
             for (int i = 0; i < count; i++) {
@@ -182,8 +175,9 @@ TOK    [a-zA-Z]
 "<"{TOK}+">"        { HANDLE(0); }
 "/"{TOK}+">"           { HANDLE(0); }
 " "{TOK}+"="        { HANDLE(1); }
+"&"{TOK}+";"          { HANDLE(2); }
 "&"{TOK}+          { HANDLE(2); }
-"&#"[0-9]+        { HANDLE(3); }
+"&#"[0-9]+";"        { HANDLE(3); }
 .                     { /* ignoring rest */ }
 
 %%

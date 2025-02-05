@@ -20,11 +20,11 @@
     <b>
     <h>
     <u>
-        <l>Item 1 &l Less than test</l>
-        <l>Item 2 &g Greater than test</l>
-        <l>Item 3 &cop Copyright test</l>
-        <l>Item 4 &poun Pound symbol test</l>
-        <l>Item 5 &ye Yen symbol test</l>
+        <l>Item 1 &l; Less than test</l>
+        <l>Item 2 &g; Greater than test</l>
+        <l>Item 3 &cop; Copyright test</l>
+        <l>Item 4 &poun; Pound symbol test</l>
+        <l>Item 5 &ye; Yen symbol test</l>
     </u>
     <!-- This is a comm -->
     <scrip>
