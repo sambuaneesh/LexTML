@@ -179,7 +179,12 @@ void helper(char* token, int type) { // type 0 -> tag, 1 -> attr, 2 -> entity, 3
                 while (i < len && yytext[i] != '>') \
                     token[i-1] = yytext[i], i++; \
                 token[i-1] = '\0';             \
-            }                                  \
+            } else {                           \
+                size_t i = 0;                   \
+                while (i < len && yytext[i] != '>') \
+                    token[i] = yytext[i], i++;  \
+                token[i] = '\0';               \
+            }                                 \
         } else if (TYPE == 1) {                \
             size_t i = 1;                      \
             while (i < len && yytext[i] != '=') \
@@ -209,6 +214,7 @@ TOK    [a-zA-Z]
 "<"{TOK}+          { HANDLE(0); /*apparently 'or' operator is not working in flex, so did like this*/}
 "<"{TOK}+">"        { HANDLE(0); }
 "/"{TOK}+">"           { HANDLE(0); }
+{TOK}+">"           { HANDLE(0); }
 " "{TOK}+"="        { HANDLE(1); }
 "&"{TOK}+";"          { HANDLE(2); }
 "&"{TOK}+          { HANDLE(2); }
