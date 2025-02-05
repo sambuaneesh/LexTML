@@ -164,42 +164,20 @@ void helper(char* token, int type) { // type 0 -> tag, 1 -> attr, 2 -> entity, 3
 
 // macro for the below redundant code for passing tokens to helper
 #define HANDLE(TYPE) {                          \
-    char token[100];                           \
+    char token[MAX_WORD_LEN];                  \
     size_t len = strlen(yytext);               \
     if (len <= 1) ECHO;                        \
     else {                                     \
-        if (TYPE == 0) {                       \
-            if (yytext[0] == '<') {            \
-                size_t i = 1;                   \
-                while (i < len && yytext[i] != '>') \
-                    token[i-1] = yytext[i], i++; \
-                token[i-1] = '\0';             \
-            } else if (yytext[0] == '/') {     \
-                size_t i = 1;                   \
-                while (i < len && yytext[i] != '>') \
-                    token[i-1] = yytext[i], i++; \
-                token[i-1] = '\0';             \
-            } else {                           \
-                size_t i = 0;                   \
-                while (i < len && yytext[i] != '>') \
-                    token[i] = yytext[i], i++;  \
-                token[i] = '\0';               \
-            }                                 \
-        } else if (TYPE == 1) {                \
-            size_t i = 1;                      \
-            while (i < len && yytext[i] != '=') \
-                token[i-1] = yytext[i], i++;   \
-            token[i-1] = '\0';                \
-        } else if (TYPE == 2 || TYPE == 3) {   \
-            size_t start = (TYPE == 3) ? 2 : 1; \
-            size_t i = 0;                      \
-            while (start < len && yytext[start] != ';') \
-                token[i++] = yytext[start++];  \
-            token[i] = '\0';                   \
-        } else if (TYPE == 4) {                \
-            strncpy(token, yytext + 1, len - 1); \
-            token[len - 1] = '\0';             \
-        }                                      \
+        size_t i = 0, j = 0;                   \
+        /* skipping all the initial chars */       \
+        if (TYPE == 0) i = (yytext[0] == '<' || yytext[0] == '/') ? 1 : 0; \
+        else if (TYPE == 1) i = 1;             \
+        else if (TYPE == 2 || TYPE == 3) i = (TYPE == 3) ? 2 : 1; \
+        else if (TYPE == 4) i = 1;             \
+        /* extracting until the delimeter */     \
+        while (i < len && yytext[i] != '>' && yytext[i] != '=' && yytext[i] != ';') \
+            token[j++] = yytext[i++];          \
+        token[j] = '\0';                       \
         helper(token, TYPE);                   \
     }                                          \
 }

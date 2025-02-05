@@ -1,4 +1,4 @@
-# HTML autocomplete suggestions using Lex
+# HTML autocomplete suggestions using FLex
 ## Default Usage
 - Default input is in `input`
 - Enter `make all` to run from the default input file
