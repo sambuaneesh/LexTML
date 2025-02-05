@@ -7,7 +7,7 @@
         bod { background-colo: #f0f0f0; }
     </styl>
     <scrip>
-        i (true) {
+        @i (true) {
             consol.log("Script block token test");
         }
     </scrip>
