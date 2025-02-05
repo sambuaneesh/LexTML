@@ -22,6 +22,8 @@ Node *newNode() {
 
 Node *root; // tags trie
 Node *attr_root;  // sep trie for attribs
+Node *entity_root;  // trie for html entities
+Node *num_entity_root;  // trie for numeric entities
 int line = 1;
 
 void insert(char *str, Node *trie) {
@@ -75,6 +77,7 @@ int search(Node *trie, char *str, char *suggestions[], int *count) {
     return curr->end;
 }
 
+// while i am at it, added few extra tokens as well!
 char *html_tags[] = {
     "head", "header", "body", "html", "div", "img",
     "p", "a", "title", "meta", "link",
@@ -92,6 +95,13 @@ char *html_attributes[] = {
     NULL
 };
 
+char *html_entities[] = {"amp", "lt", "gt", "quot", "apos", "nbsp",
+    "copy", "reg", "euro", "pound", "yen", "sect", "deg", NULL};
+
+char *numeric_entities[] = {"32", "33", "34", "35", "36", "37", "38", "39", 
+    "60", "62", "160", "169", "174", "8364", "163", "165", "167", "176", NULL};
+
+
 void init() {
     root = newNode();
     for (int i = 0; html_tags[i] != NULL; i++)
@@ -100,25 +110,48 @@ void init() {
     attr_root = newNode();
     for (int i = 0; html_attributes[i] != NULL; i++)
         insert(html_attributes[i], attr_root);
+    
+    entity_root = newNode();
+    for (int i = 0; html_entities[i] != NULL; i++)
+        insert(html_entities[i], entity_root);
+
+    num_entity_root = newNode();
+    for (int i = 0; numeric_entities[i] != NULL; i++)
+        insert(numeric_entities[i], num_entity_root);
 }
 
-void helper(char* token, int type) { // type 0 -> tag, 1 -> attr
+void helper(char* token, int type) { // type 0 -> tag, 1 -> attr, 2 -> entity, 3 -> num_entity
     char *suggestions[MAX_SUGGESTIONS];
     int count = 0;
     
-    Node *trie = (type == 0) ? root : attr_root;
+    Node *trie;
+    char *typeName;
+    switch (type) {
+        case 0:
+            trie = root;
+            typeName = "tag";
+            break;
+        case 1:
+            trie = attr_root;
+            typeName = "attribute";
+            break;
+        case 2:
+            trie = entity_root;
+            typeName = "entity";
+            break;
+        case 3:
+            trie = num_entity_root;
+            typeName = "numeric entity";
+            break;
+        default:
+            return;
+    }
     
     char *word = strtok(token, " ");
     if (search(trie, word, suggestions, &count)) {
-        if (type == 0)
-            printf("Line %d: Valid tag: %s\n", line, word);
-        else
-            printf("Line %d: Valid attribute: %s\n", line, word);
+        printf("Line %d: Valid %s: %s\n", line, typeName, word);
     } else {
-        if (type == 0)
-            printf("Line %d: Invalid tag: %s\n", line, word);
-        else
-            printf("Line %d: Invalid attribute: %s\n", line, word);
+        printf("Line %d: Invalid %s: %s\n", line, typeName, word);
         if (count > 0) {
             printf("Suggestions:\n");
             for (int i = 0; i < count; i++) {
@@ -149,6 +182,8 @@ TOK    [a-zA-Z]
 "<"{TOK}+">"        { HANDLE(0); }
 "/"{TOK}+">"           { HANDLE(0); }
 " "{TOK}+"="        { HANDLE(1); }
+"&"{TOK}+          { HANDLE(2); }
+"&#"[0-9]+        { HANDLE(3); }
 .                     { /* ignoring rest */ }
 
 %%

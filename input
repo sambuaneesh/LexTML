@@ -1,3 +1,34 @@
-<!doctype html>
-<body></bod>
-<img sr="cat.jpg" alt="cat" width="100" height="100">
+<!DOCTYPE htm>
+<htm>
+<hed>
+    <met charet="UTF-8">
+    <titl>Test HTML Tokens</titl>
+    <styl>
+        bod { background-colo: #f0f0f0; }
+    </styl>
+    <scrip>
+        i (true) {
+            consol.log("Script block token test");
+        }
+    </scrip>
+</hed>
+<bod>
+    <h1 clas="header">Hello &am Welcome!</h1>
+    <p i='para1'>This is a <stron>test</stron> of HTML token categories.</p>
+    <im sr="image.jpg" al="Sample Image" width=10 heigh=10>
+    <a hre="https://example.com">Click Here</a>
+    <b>
+    <h>
+    <u>
+        <l>Item 1 &l Less than test</l>
+        <l>Item 2 &g Greater than test</l>
+        <l>Item 3 &cop Copyright test</l>
+        <l>Item 4 &poun Pound symbol test</l>
+        <l>Item 5 &ye Yen symbol test</l>
+    </u>
+    <!-- This is a comm -->
+    <scrip>
+        le data = "String with &quot;quote text";
+    </scrip>
+</bod>
+</htm>
